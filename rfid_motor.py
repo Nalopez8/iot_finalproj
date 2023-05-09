@@ -50,4 +50,4 @@ finally:
     GPIO.cleanup()
    
 sleep(1)
-os.system('python3 /home/pi/Desktop/test_for_cyber_iotproj/final_test.py')
+os.system('python3 /home/pi/Desktop/test_for_cyber_iotproj/lcd_sens.py')
