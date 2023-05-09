@@ -50,4 +50,6 @@ finally:
     GPIO.cleanup()
    
 sleep(1)
-os.system('python3 /home/pi/Desktop/test_for_cyber_iotproj/lcd_sens.py')
+
+######Just be sure to change the directory below to the proper directory where the zip file will be extracted
+os.system('python3 /home/pi/Downloads/iot_finalproj-main/lcd_sens.py')
