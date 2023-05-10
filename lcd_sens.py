@@ -8,7 +8,7 @@ GPIO.setwarnings(False)
 '''
 define pin for lcd
 '''
-# Timing constants
+# Timing constants for LCD Display
 E_PULSE = 0.0005
 E_DELAY = 0.0005
 delay = 1
@@ -16,14 +16,19 @@ delay = 1
 
                        
 # Define GPIO to LCD mapping
+# RS is read, E is enable, D4-D7 are data pins
 LCD_RS = 7                                                                                                                                                                                                              
 LCD_E  = 11
 LCD_D4 = 12
 LCD_D5 = 13
 LCD_D6 = 15
 LCD_D7 = 16
+
+###Define pins for IR sensors
 slot1_Sensor = 29
 slot2_Sensor = 31
+
+###Set LCD Pins as output and IR Sensor Pins as Input
 GPIO.setup(LCD_E, GPIO.OUT)  # E
 GPIO.setup(LCD_RS, GPIO.OUT) # RS
 GPIO.setup(LCD_D4, GPIO.OUT) # DB4
@@ -32,17 +37,13 @@ GPIO.setup(LCD_D6, GPIO.OUT) # DB6
 GPIO.setup(LCD_D7, GPIO.OUT) # DB7
 GPIO.setup(slot1_Sensor, GPIO.IN)
 GPIO.setup(slot2_Sensor, GPIO.IN)
-# Define some device constants
+
+# Define  device constants
 LCD_WIDTH = 16    # Maximum characters per line
-LCD_CHR = True
-LCD_CMD = False
+LCD_CHR = True  ### character
+LCD_CMD = False   #####command
 LCD_LINE_1 = 0x80 # LCD RAM address for the 1st line
 LCD_LINE_2 = 0xC0 # LCD RAM address for the 2nd line
-# LCD_LINE_3 = 0x90# LCD RAM address for the 3nd line
-
-
-
-
 
 '''
 Function Name :lcd_init()
@@ -66,6 +67,7 @@ def lcd_byte(bits, mode):
   # bits = data
   # mode = True  for character
   #        False for command
+  #### number for bits depends on what would like to be done like clear, iniitialise, etc. 
  
   GPIO.output(LCD_RS, mode) # RS
  
@@ -104,7 +106,7 @@ def lcd_byte(bits, mode):
   lcd_toggle_enable()
 '''
 Function Name : lcd_toggle_enable()
-Function Description:basically this is used to toggle Enable pin
+Function Description: This is used to toggle Enable pin
 '''
 def lcd_toggle_enable():
   # Toggle enable
@@ -116,6 +118,8 @@ def lcd_toggle_enable():
 '''
 Function Name :lcd_string(message,line)
 Function  Description :print the data on lcd
+The Message goes in double quotes " ", other field
+specifies the line we would like to display on
 
 '''
 
@@ -128,29 +132,30 @@ def lcd_string(message,line):
   lcd_byte(line, LCD_CMD)
  
   for i in range(LCD_WIDTH):
+    ####Prints characters from message to display
     lcd_byte(ord(message[i]),LCD_CHR)
    
+  ####Function to display "Full" when the count is 0
 def count0():
     lcd_string("Full           ",LCD_LINE_1)
-#     lcd_string("                                ",LCD_LINE_2)
     time.sleep(0.5)
     lcd_byte(0x01,LCD_CMD)
-#     delay = 1
+
  
+  #####Function to display "1 Space Open" when the count is 1
 def count1():
     lcd_string("1 Space(s) Open",LCD_LINE_1)
-#     lcd_string("                                ",LCD_LINE_2)
     time.sleep(0.5)
     lcd_byte(0x01,LCD_CMD)
-#     delay = 1
    
+   #####Function to display "1 Space Open" when the count is 2
 def count2():
     lcd_string("2 Space(s) Open",LCD_LINE_1)
-#     lcd_string("                                ",LCD_LINE_2)
     time.sleep(0.5)
     lcd_byte(0x01,LCD_CMD)
-#     delay = 1
-
+    
+    
+###Function used in testing to see if count could be held
 def lcd_count(count,line):
   # Send string to display
  
@@ -161,7 +166,7 @@ def lcd_count(count,line):
   for i in range(LCD_WIDTH):
       lcd_byte(ord(count[i]),LCD_CHR)
 
-
+####Initialize display, display welcome message, clear
 lcd_init()
 lcd_string("Welcome to",LCD_LINE_1)
 time.sleep(0.5)
@@ -174,32 +179,18 @@ lcd_byte(0x01,LCD_CMD) # 000001 Clear display
 delay = 5
 
 
-
-# while 1:
-#
-#   #lcd_string("Slots Open",LCD_LINE_1)
-#   time.sleep(1)
-#   lcd_init()
-
-#     slot1_status = GPIO.input(slot1_Sensor)
-#     time.sleep(0.1)
-#     slot2_status = GPIO.input(slot2_Sensor)
-#     time.sleep(0.1)
-#   lcd_byte(0x01,LCD_CMD)
- 
+##############Function to check the spots available and to determine count 
 def check_spots(slot1_status,slot2_status):
+  #########This is the condition if both spots are available (Count is 2)
     if((slot1_status == True) and (slot2_status==True)):
         count=2
         time.sleep(0.2)
         count2()
         lcd_byte(0x01,LCD_CMD)
         delay=5
-    #lcd_string("2 ",LCD_LINE_2)
-    #lcd_num("2",LCD_LINE_2)
-    #  delay = 1
-    #    time.sleep(0.5)
 
 
+#########This is the condition if one spot is available (Count is 1)
     if((slot1_status == True) and (slot2_status==False)):
         count=1
         time.sleep(0.2)
@@ -207,39 +198,30 @@ def check_spots(slot1_status,slot2_status):
         lcd_byte(0x01,LCD_CMD)
         delay=5
        
-    #    lcd_string("1 ",LCD_LINE_2)
-    # lcd_num("1",LCD_LINE_2)
-    #    time.sleep(0.5)
 
-
+#########This is the condition if one spot is available (Count is 1)
     if((slot1_status == False) and (slot2_status==True)):
         count=1
         time.sleep(0.2)
         count1()
         lcd_byte(0x01,LCD_CMD)
         delay=5
-    #lcd_string("1 ",LCD_LINE_2)
-    #lcd_byte(0x01,LCD_CMD)
-    #  lcd_num("1",LCD_LINE_2)
-    #    time.sleep(0.5)
 
-
+#########This is the condition if there are no spots available (Count is 0)
     if((slot1_status == False) and (slot2_status==False)):
         count=0
         time.sleep(0.2)
         count0()
         lcd_byte(0x01,LCD_CMD)
         delay=5
-    #lcd_string("Full ",LCD_LINE_2)
-    #lcd_byte(0x01,LCD_CMD)
-    # lcd_num("0",LCD_LINE_2)
-    #    time.sleep(0.5)
 
+##########Prints the amount of spots available to Python Shell
     print("Slots Open:",count)
    
-#lcd_count("1",LCD_LINE_2)
+
 while 1:
    
+    #####Check the sensor status and clear display every 0.1 seconds
     slot1_status = GPIO.input(slot1_Sensor)
     time.sleep(0.1)
     slot2_status = GPIO.input(slot2_Sensor)
